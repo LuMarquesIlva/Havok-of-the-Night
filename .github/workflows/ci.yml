@@ -1,4 +1,4 @@
-name: Template Build
+name: Havok of the Night Build
 
 on:
   push:

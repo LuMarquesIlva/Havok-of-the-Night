@@ -6,7 +6,7 @@ GREEN = '\033[92m'
 RESET = '\033[0m'
 
 SETTINGSLIST = [
-    ["builddir", 'build'],
+    ["builddir", 'BUILD'],
     ["reconf", False],
     ["wipe", False],
     ["download", True]

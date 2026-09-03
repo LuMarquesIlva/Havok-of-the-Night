@@ -1,5 +1,5 @@
 project(
-  'SDL3 Template Project',
+  'Havok_of_the_Night',
   'cpp', 'c',
   meson_version: '>=1.1.0',
   version: '0.1.0',
@@ -39,7 +39,7 @@ else
 message('SYSTEM IS NOT WINDOWS - not using custom win config\n')
   executable(
     meson.project_name(),
-    sources: ['src/main.cpp', 'src/Entity.cpp', 'src/VectorFuncs.cpp', 'src/Input.cpp'],
+    sources: ['src/main.cpp', 'src/Input.cpp'],
     include_directories: ['include'],
     dependencies: [sdl3_dep, sdl3_ttf_dep, sdl3_image_dep, glfw_dep],
   )

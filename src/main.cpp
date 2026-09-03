@@ -1,47 +1,22 @@
 #define SDL_MAIN_USE_CALLBACKS 1  /* use the callbacks instead of main() */
-#include <SDL3/SDL.h>
-#include <SDL3/SDL_main.h>
 
+#include "include/Core.hpp"
 #include "include/Entity.hpp"
 #include "include/Input.hpp"
 
-/* We will use this renderer to draw into this window every frame. */
-static SDL_Window *window = NULL;
-static SDL_Renderer *renderer = NULL;
-
 Vector2 vec2 = Vector2(60.0, 40.0);
 Input input;
+Core Core;
 Input::States InputStates;
 
-/* This function runs once at startup. */
 SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[])
 {
-    SDL_SetAppMetadata("Doom Engine Clone", "1.0", "com.example.doom-engine-clone");
-    SDL_SetHint(SDL_HINT_RENDER_DRIVER, "opengl");
-
-    if (!SDL_Init(SDL_INIT_VIDEO)) {
-        SDL_Log("Couldn't initialize SDL: %s", SDL_GetError());
-        return SDL_APP_FAILURE;
-    }
-
-    if (!SDL_CreateWindowAndRenderer("Doom Engine Clone", 640, 480, SDL_WINDOW_RESIZABLE | SDL_WINDOW_OPENGL, &window, &renderer)) {
-        SDL_Log("Couldn't create window/renderer: %s", SDL_GetError());
-        return SDL_APP_FAILURE;
-    }
-
-    // Disables VSYNC to be compatible with older integrated GPUs
-    if (SDL_SetRenderVSync(renderer, SDL_RENDERER_VSYNC_DISABLED) == false) {
-    SDL_Log("Failed to disable VSync: %s", SDL_GetError());
-    }
-
-    SDL_SetRenderLogicalPresentation(renderer, 640, 480, SDL_LOGICAL_PRESENTATION_LETTERBOX);
-
-    //input.Init();
-
-    return SDL_APP_CONTINUE;  /* carry on with the program! */
+    SDL_AppResult APP_RES = Core.Init();
+    return APP_RES;
 }
 
-Object obj(1, 40, 60, 30, 30);
+Rect obj(1, 40, 60, 30, 30);
+Line line(2, 40, 60, 300, 300);
 
 /* This function runs when a new event (mouse input, keypresses, etc) occurs. */
 SDL_AppResult SDL_AppEvent(void *appstate, SDL_Event *event)
@@ -54,8 +29,7 @@ SDL_AppResult SDL_AppEvent(void *appstate, SDL_Event *event)
     }
 
     if (InputStates.IsMouseButtonDown(1) == true) {
-        obj.Rect.x = event->button.x;
-        obj.Rect.y = event->button.y;
+        obj.SetPosition(event->button.x, event->button.y);
     }
 
     // Keyboard Input Update
@@ -63,18 +37,18 @@ SDL_AppResult SDL_AppEvent(void *appstate, SDL_Event *event)
 
         switch (event->key.key) {
         case SDL_Keycode(SDLK_W):
-            obj.Rect.y -= 1;
+            obj.Move(0.0f, -1.0f);
             break;
         case SDL_Keycode(SDLK_A):
-            obj.Rect.x -= 1;
+            obj.Move(-1.0f, 0.0f);
             break;
         case SDL_Keycode(SDLK_S):
-            obj.Rect.y += 1;
-            SDL_Log("X: %f | Y: %f", obj.Rect.x, obj.Rect.y);
+            obj.Move(0.0f, 1.0f);
+            SDL_Log("X: %f | Y: %f", obj.GetPosition()->x, obj.GetPosition()->y);
             break;
         case SDL_Keycode(SDLK_D):
-            obj.Rect.x += 1;
-            SDL_Log("X: %f | Y: %f", obj.Rect.x, obj.Rect.y);
+            obj.Move(1.0f, 0.0f);
+            SDL_Log("X: %f | Y: %f", obj.GetPosition()->x, obj.GetPosition()->y);
             break;
         case SDLK_Q:
             SDL_Quit();
@@ -94,17 +68,21 @@ SDL_AppResult SDL_AppIterate(void *appstate)
 {
     //const double now = ((double)SDL_GetTicks()) / 1000.0;  /* convert from milliseconds to seconds. */
 
-    SDL_SetRenderDrawColorFloat(renderer, 0.3, 0.3, 0.3, SDL_ALPHA_OPAQUE_FLOAT);  /* new color, full alpha. */
+    SDL_SetRenderDrawColorFloat(Core.GetRenderer(), 0.3, 0.3, 0.3, SDL_ALPHA_OPAQUE_FLOAT);  /* new color, full alpha. */
 
     /* clear the window to the draw color. */
-    SDL_RenderClear(renderer);
+    SDL_RenderClear(Core.GetRenderer());
 
-    SDL_SetRenderDrawColorFloat(renderer, 0.2, 0.5, 0.8, SDL_ALPHA_OPAQUE_FLOAT);
+    SDL_SetRenderDrawColorFloat(Core.GetRenderer(), 0.2, 0.5, 0.8, SDL_ALPHA_OPAQUE_FLOAT);
 
-    SDL_RenderFillRect(renderer, &obj.Rect);
+    obj.Draw();
+
+    SDL_SetRenderDrawColorFloat(Core.GetRenderer(), 0.6, 0.8, 0.8, SDL_ALPHA_OPAQUE_FLOAT);
+
+    line.Draw();
 
     /* put the newly-cleared rendering on the screen. */
-    SDL_RenderPresent(renderer);
+    SDL_RenderPresent(Core.GetRenderer());
 
     return SDL_APP_CONTINUE;  /* carry on with the program! */
 }

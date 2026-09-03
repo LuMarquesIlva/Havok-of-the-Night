@@ -1,13 +1,12 @@
-#ifndef INPUT_HPP
-#define INPUT_HPP
+#pragma once
 
-#include "include/VectorFuncs.hpp"
+#include "VectorFuncs.hpp"
 #include <array>
 #include <SDL3/SDL_events.h>
 #include <SDL3/SDL_mouse.h>
 #include <SDL3/SDL_log.h>
 
-class Input 
+class Input
 {
     public:
         struct States {
@@ -38,16 +37,16 @@ class Input
                         return true;
                     };
                 };
-                
+
                 return false;
             };
 
             void ChangePressedValue(int index) {
-                
+
             }
 
             bool IsKeyDown(SDL_Scancode Key) {
-                
+
                 // Iterate trought the keyboard list
                 for (int i = 0; i < numkeys; i++) {
 
@@ -61,11 +60,9 @@ class Input
                         return false;
                     };
                 };
-                
+
                 return false;
             };
         };
-        
-};
 
-#endif
+};
