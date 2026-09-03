@@ -18,8 +18,8 @@ public:
             std::vector<float> Vector2(value1, value2);
         } catch (const std::length_error& e) {
             std::cerr << "Vector size exceeds theoretical max: " << e.what() << " -> Zeroing\n";
-            x = 0.0f;
-            y = 0.0f;
+            value1 = 0.0f;
+            value2 = 0.0f;
         }
     };
 

@@ -7,7 +7,7 @@
 Vector2 vec2 = Vector2(60.0, 40.0);
 Input input;
 Core Core;
-Input::States InputStates;
+Input::Mouse _Mouse;
 
 SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[])
 {
@@ -22,14 +22,14 @@ Line line(2, 40, 60, 300, 300);
 SDL_AppResult SDL_AppEvent(void *appstate, SDL_Event *event)
 {
 
-    InputStates.UpdateMouse(event);
+    _Mouse.UpdateMouse(event);
 
     if (event->type == SDL_EVENT_QUIT) {
         return SDL_APP_SUCCESS;  /* end the program, reporting success to the OS. */
     }
 
-    if (InputStates.IsMouseButtonDown(1) == true) {
-        obj.SetPosition(event->button.x, event->button.y);
+    if (_Mouse.IsMouseButtonDown(1) == true) {
+        line.SetEndPosition(event->button.x, event->button.y);
     }
 
     // Keyboard Input Update
@@ -44,11 +44,11 @@ SDL_AppResult SDL_AppEvent(void *appstate, SDL_Event *event)
             break;
         case SDL_Keycode(SDLK_S):
             obj.Move(0.0f, 1.0f);
-            SDL_Log("X: %f | Y: %f", obj.GetPosition()->x, obj.GetPosition()->y);
+            //SDL_Log("X: %f | Y: %f", obj.GetPosition()->x, obj.GetPosition()->y);
             break;
         case SDL_Keycode(SDLK_D):
             obj.Move(1.0f, 0.0f);
-            SDL_Log("X: %f | Y: %f", obj.GetPosition()->x, obj.GetPosition()->y);
+            //SDL_Log("X: %f | Y: %f", obj.GetPosition()->x, obj.GetPosition()->y);
             break;
         case SDLK_Q:
             SDL_Quit();
