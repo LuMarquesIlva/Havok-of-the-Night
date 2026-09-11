@@ -1,7 +1,5 @@
 #pragma once
 
-#include <typeinfo>
-
 #include <SDL3/SDL_rect.h>
 #include <SDL3/SDL_video.h>
 
@@ -124,6 +122,16 @@ public:
 
     void Draw() {
         SDL_RenderLine(core.GetRenderer(), x, y, x2, y2);
+    }
+
+    void SetEndPosition(float x2, float y2) {
+        this->x2 = x2;
+        this->y2 = y2;
+    }
+
+    void SetStartPosition(float x1, float y1) {
+        this->x = x1;
+        this->y = y1;
     }
 
 };

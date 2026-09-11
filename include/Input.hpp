@@ -1,49 +1,24 @@
 #pragma once
 
 #include "VectorFuncs.hpp"
-#include <array>
 #include <SDL3/SDL_events.h>
 #include <SDL3/SDL_mouse.h>
 #include <SDL3/SDL_log.h>
+#include <SDL3/SDL_keyboard.h>
+#include "Utility.hpp"
 
 class Input
 {
+    private:
+        bool inputDebug = false;
     public:
-        struct States {
+        class States {
+            public:
+
             int numkeys = 0;
 
-            std::array<bool, 5> MouseStates {false, false, false, false, false};
             const bool* KeyboardState = SDL_GetKeyboardState(&numkeys);
-
-            void UpdateMouse(SDL_Event *events);
-
-            void ChangeMouseValue(bool value, int index) {
-               this->MouseStates.at(index) = value;
-            };
-
-            void FillMouseListWithValue(bool value) {
-                for (int i = 0; i < (int)MouseStates.size(); i++) {
-                    this->MouseStates.at(i) = value;
-                };
-            };
-
-            bool IsMouseButtonDown(int index) {
-                if (index != 0) {
-                    if (this->MouseStates.at(index-1) == true) {
-                        return true;
-                    };
-                } else {
-                    if (this->MouseStates.at(index) == true) {
-                        return true;
-                    };
-                };
-
-                return false;
-            };
-
-            void ChangePressedValue(int index) {
-
-            }
+            Internal_Vector MouseStates = Internal_Vector(false, false, false, false, false);
 
             bool IsKeyDown(SDL_Scancode Key) {
 
@@ -65,4 +40,102 @@ class Input
             };
         };
 
+    class Mouse {
+        public:
+            int x = 0;
+            int y = 0;
+
+            Mouse() {
+                _States = new Input::States();
+            };
+
+            Input::States *_States;
+
+            void ChangeMouseValue(int index, bool value) {
+                _States->MouseStates.Set(index, value);
+            };
+
+            void FillMouseListWithValue(bool value) {
+                for (int i = 0; i < (int)_States->MouseStates.GetSize(); i++) {
+                    _States->MouseStates.Set(i, value);
+                };
+            };
+
+            bool IsMouseButtonDown(int index) const {
+                //_States->MouseStates.Set(index, true);
+                bool deb_bool = _States->MouseStates.GetBool(index); // Gets the bool value at index
+                if (deb_bool == true) {
+                    return true;
+                };
+                return false;
+            };
+
+            void UpdateMouse(SDL_Event *events) {
+                if (events->type == SDL_EVENT_MOUSE_BUTTON_DOWN) {
+                    switch (events->button.button) {
+                        case 1:
+                            this->ChangeMouseValue(0, true); // Sets mouse button 1 value to true at index 0
+                            if (debug_var == true) {
+                                SDL_Log("Mouse button 1 value change");
+                            }
+                            break;
+                        case 2:
+                            this->ChangeMouseValue(1, true);
+                            if (debug_var == true) {
+                                SDL_Log("Mouse button 2 value change");
+                            }
+                            break;
+                        case 3:
+                            this->ChangeMouseValue(2, true);
+                            if (debug_var == true) {
+                                SDL_Log("Mouse button 3 value change");
+                            }
+                            break;
+                        case 4:
+                            this->ChangeMouseValue(3, true);
+                            if (debug_var == true) {
+                                SDL_Log("Mouse button 4 value change");
+                            }
+                            break;
+                        case 5:
+                            this->ChangeMouseValue(4, true);
+                            if (debug_var == true) {
+                                SDL_Log("Mouse button 5 value change");
+                            }
+                            break;
+                        default:
+                            break;
+                    }
+                } else if (events->type == SDL_EVENT_MOUSE_BUTTON_UP) {
+                    switch (events->button.button) {
+                        case 1:
+                            this->ChangeMouseValue(0, false);
+                            if (debug_var == true) {
+                                SDL_Log("Mouse button 1 value change");
+                            }
+                            break;
+                        case 2:
+                            this->ChangeMouseValue(1, false);
+                            if (debug_var == true) {
+                                SDL_Log("Mouse button 2 value change");
+                            }
+                            break;
+                        case 3:
+                            this->ChangeMouseValue(2, false);
+                            if (debug_var == true) {
+                                SDL_Log("Mouse button 3 value change");
+                            }
+                            break;
+                        case 4:
+                            this->ChangeMouseValue(3, false);
+                            if (debug_var == true) {
+                                SDL_Log("Mouse button 4 value change");
+                            }
+                            break;
+                        default:
+                            break;
+                    }
+                };
+            };
+    };
 };
