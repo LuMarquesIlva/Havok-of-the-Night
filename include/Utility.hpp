@@ -11,16 +11,16 @@ static bool debug_var = false;
 template<typename... Args>
 const char* get_type_name(Args... args)
 {
-    const char* type_name = ((typeid(args).name()), ...);
+    const char* type_name = ((typeid(*args).name()), ...);
     int status;
     char* demangled = abi::__cxa_demangle(type_name, 0, 0, &status);
     if (status == 0)
         type_name = demangled;
-    if (strcmp(type_name, "b") == 0)
+    if (strcmp(type_name, "bool") == 0)
         return typeid(bool).name();
-    if (strcmp(type_name, "i") == 0)
+    else if (strcmp(type_name, "int") == 0)
         return typeid(int).name();
-    if (strcmp(type_name, "f") == 0)
+    else if (strcmp(type_name, "float") == 0)
         return typeid(float).name();
-    return typeid(double).name();
+    throw std::runtime_error("Unknown type on Utility function");
 }

@@ -15,70 +15,115 @@ private:
     std::vector<bool> b_value = {};
     std::vector<int> i_value = {};
     std::vector<float> f_value = {};
+    size_t size = 0;
     std::string type_name;
-    int size = 0;
 public:
 
     template<typename... Args>
     Internal_Vector(Args... args) : size(sizeof...(args)), type_name(GetType(args...))
     {
+        if (sizeof...(args) == 0)
+            return;
 
-        SDL_Log("%s", type_name);
-
-        if (type_name[0] == 'b') {
-            ((b_value.push_back(args)), ...);
-        } else if (type_name[0] == 'i') {
-            ((i_value.push_back(args)), ...);
-        } else if (type_name[0] == 'f') {
-            ((f_value.push_back(args)), ...);
+        if (this->type_name[0] == 'b') { // Reserves space for boolean values and pushes them into the vector
+            this->b_value.reserve(this->size);
+            ((this->b_value.push_back(args)), ...);
+        } else if (this->type_name[0] == 'i') { // Reserves space for integer values and pushes them into the vector
+            this->i_value.reserve(this->size);
+            ((this->i_value.push_back(args)), ...);
+        } else if (this->type_name[0] == 'f') { // Reserves space for float values and pushes them into the vector
+            this->f_value.reserve(this->size);
+            ((this->f_value.push_back(args)), ...);
         }
     }
 
-    void Set(int index, int value)
+    void Set(size_t index, bool value)
     {
-        this->i_value[index] = value;
+        if (index < 0 || index >= this->size)
+            throw std::out_of_range("Index out of range");
+
+        if (this->type_name[0] != 'b')
+            throw std::invalid_argument("Type mismatch");
+
+        // Sets the value at index to value, resizing if necessary
+        if (this->size == 0) {
+            this->b_value.push_back(value);
+        } else {
+            this->b_value[index] = value;
+        }
+        return;
     }
 
-    void Set(int index, float value)
+    void Set(size_t index, int value)
     {
-        this->f_value[index] = value;
+        if (index < 0 || index >= this->size)
+            throw std::out_of_range("Index out of range");
+
+        if (this->type_name[0] != 'i')
+            throw std::invalid_argument("Type mismatch");
+
+        if (this->size == 0) {
+            this->i_value.push_back(value);
+        } else {
+            this->i_value[index] = value;
+        }
+        return;
+    }
+
+    void Set(size_t index, float value)
+    {
+        if (index < 0 || index >= this->size)
+            throw std::out_of_range("Index out of range");
+
+        if (this->type_name[0] != 'f')
+            throw std::invalid_argument("Type mismatch");
+
+        if (this->size == 0) {
+            this->f_value.push_back(value);
+        } else {
+            this->f_value[index] = value;
+        }
+        return;
     }
 
     template<typename... Args>
-    std::string GetType(Args... args) const
+    std::string GetType(Args... args) const // Returns the type name of the arguments
     {
-        const char* type_name = get_type_name(args...);
+        const char* type_name = get_type_name(&args...);
         if (strcmp(type_name, "b") == 0)
-            return typeid(b_value).name();
-        if (strcmp(type_name, "i") == 0)
-            return typeid(i_value).name();
-        return typeid(f_value).name();
+            return "bool";
+        else if (strcmp(type_name, "i") == 0)
+            return "int";
+        else if (strcmp(type_name, "f") == 0)
+            return "float";
+
+        throw std::invalid_argument("Unknown type");
     }
 
-    bool GetBool(int index) const
+    bool GetBool(size_t index) const
     {
-        if (index < 0 || index >= size)
+        if (index < 0 || index >= this->size)
             throw std::out_of_range("Index out of range");
-        return b_value[index];
+        return this->b_value[index];
     }
 
-    int GetInt(int index) const
+    int GetInt(size_t index) const
     {
-        if (index < 0 || index >= size)
+        if (index < 0 || index >= this->size)
             throw std::out_of_range("Index out of range");
-        return i_value[index];
+        return this->i_value[index];
     }
 
-    float GetFloat(int index) const
+    float GetFloat(size_t index) const
     {
-        if (index < 0 || index >= size)
+        if (index < 0 || index >= this->size)
             throw std::out_of_range("Index out of range");
-        return f_value[index];
+        return this->f_value[index];
     }
 
     size_t GetSize() const
     {
-        return size;
+        return this->size;
     }
 
 };

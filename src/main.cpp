@@ -22,15 +22,14 @@ Line line(2, 40, 60, 300, 300);
 /* This function runs when a new event (mouse input, keypresses, etc) occurs. */
 SDL_AppResult SDL_AppEvent(void *appstate, SDL_Event *event)
 {
-
-    _Mouse.UpdateMouse(event);
-
     if (event->type == SDL_EVENT_QUIT) {
         return SDL_APP_SUCCESS;  /* end the program, reporting success to the OS. */
     }
 
+    _Mouse.UpdateMouse(event);
+
     if (_Mouse.IsMouseButtonDown(0) == true) {
-        SDL_Log("Mouse Button 0 Down");
+        //SDL_Log("Mouse Button 0 Down");
         line.SetEndPosition(event->button.x, event->button.y);
     }
 
