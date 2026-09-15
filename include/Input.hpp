@@ -18,6 +18,8 @@ class Input
             int numkeys = 0;
 
             const bool* KeyboardState = SDL_GetKeyboardState(&numkeys);
+
+            Internal_Vector KeyboardKeys = Internal_Vector(0, 0);
             Internal_Vector MouseStates = Internal_Vector(false, false, false, false, false);
 
             bool IsKeyDown(SDL_Scancode Key) {
@@ -137,5 +139,36 @@ class Input
                     }
                 };
             };
+    };
+
+    class Keyboard {
+        public:
+            Keyboard() {
+                KeyboardKeyState = new Input::States();
+            }
+
+            ~Keyboard() {
+                delete KeyboardKeyState;
+            }
+
+            void Update(SDL_Event* events) {
+                if (KeyboardKeyState != nullptr) {
+                    if (events->type == SDL_EVENT_KEY_DOWN) {
+                        if (KeyboardKeyState->KeyboardKeys.GetSize() == 0) {
+                            KeyboardKeyState->KeyboardKeys.Append(events->key.scancode);
+                        } else {
+                            KeyboardKeyState->KeyboardKeys.Set(KeyboardKeyState->KeyboardKeys.GetSize() - 1, events->key.scancode);
+                        }
+                    }
+                    if (events->type == SDL_EVENT_KEY_UP) {
+                        if (!KeyboardKeyState->IsKeyDown(events->key.scancode)) {
+                            KeyboardKeyState->KeyboardKeys.Set(KeyboardKeyState->KeyboardKeys.GetSize() - 1, 0);
+                        }
+                    }
+                    SDL_Log("%d", events->key.scancode);
+                }
+            }
+
+            Input::States* KeyboardKeyState;
     };
 };

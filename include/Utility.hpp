@@ -1,26 +1,58 @@
 #pragma once
 
-#include <typeinfo>
 #include <cxxabi.h>
+#include <string_view>
+#include <string>
+#include <vector>
+#include <stdexcept>
 #include <iostream>
+
 
 #include <SDL3/SDL_log.h>
 
-static bool debug_var = false;
 
-template<typename... Args>
-const char* get_type_name(Args... args)
+static bool debug_var = true;
+
+template<typename... T>
+constexpr std::string_view get_type_name(T...)
 {
-    const char* type_name = ((typeid(*args).name()), ...);
-    int status;
-    char* demangled = abi::__cxa_demangle(type_name, 0, 0, &status);
-    if (status == 0)
-        type_name = demangled;
-    if (strcmp(type_name, "bool") == 0)
-        return typeid(bool).name();
-    else if (strcmp(type_name, "int") == 0)
-        return typeid(int).name();
-    else if (strcmp(type_name, "float") == 0)
-        return typeid(float).name();
-    throw std::runtime_error("Unknown type on Utility function");
+    #if defined(__GNUC__) || defined(__clang__)
+        std::string_view func = __PRETTY_FUNCTION__;
+        // Format: "constexpr std::string_view get_type_name() [with T = ...]"
+        if (debug_var)
+            SDL_Log("func_data: %s", func.data());
+        size_t start = func.find("T = ") + 4; // Get the T arguments
+        return func.substr(start, func.size() - start - 1);
+    #elif defined(_MSC_VER)
+        std::string_view func = __FUNCSIG__;
+        // Format: "class std::basic_string_view<char,struct std::char_traits<char> > __cdecl get_type_name<int>(void)"
+        size_t start = func.find("get_type_name<") + 13;
+        return func.substr(start, func.find('>') - start);
+    #endif
+}
+
+std::vector<std::string> split(const std::string& str, const std::string& delim) {
+    std::vector<std::string> tokens;
+    size_t pos = 0;
+    std::string token;
+    std::string str_copy = str;
+    while ((pos = str_copy.find(delim)) != std::string::npos) {
+        token = str_copy.substr(0, pos);
+        tokens.push_back(token);
+        str_copy.erase(0, pos + delim.length()); // Nota: str_copy é passado por valor
+    }
+
+    if (tokens.empty()) {
+        throw std::runtime_error("tokens is empty after split");
+    }
+
+    tokens.push_back(str_copy);
+    return tokens;
+}
+
+void print_vector(std::vector<std::string> v) {
+    for (const auto& elem : v) {
+        std::cout << elem << " |";
+    }
+    std::cout << "\n";
 }

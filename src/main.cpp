@@ -8,6 +8,7 @@
 Vector2 vec2 = Vector2(60.0, 40.0);
 Input input;
 Input::Mouse _Mouse;
+Input::Keyboard _Keyboard;
 
 SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[])
 {
@@ -32,6 +33,8 @@ SDL_AppResult SDL_AppEvent(void *appstate, SDL_Event *event)
         //SDL_Log("Mouse Button 0 Down");
         line.SetEndPosition(event->button.x, event->button.y);
     }
+
+    _Keyboard.Update(event);
 
     // Keyboard Input Update
     if (event->type == SDL_EVENT_KEY_DOWN) {

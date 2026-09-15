@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstddef>
+#include <type_traits>
 #include <vector>
 #include <iostream>
 #include <stdexcept>
@@ -22,9 +23,6 @@ public:
     template<typename... Args>
     Internal_Vector(Args... args) : size(sizeof...(args)), type_name(GetType(args...))
     {
-        if (sizeof...(args) == 0)
-            return;
-
         if (this->type_name[0] == 'b') { // Reserves space for boolean values and pushes them into the vector
             this->b_value.reserve(this->size);
             ((this->b_value.push_back(args)), ...);
@@ -37,13 +35,40 @@ public:
         }
     }
 
+    void Append(bool value)
+    {
+        if (this->type_name[0] != 'b')
+            throw std::invalid_argument("Type mismatch");
+
+        this->b_value.push_back(value);
+        this->size++;
+    }
+
+    void Append(int value)
+    {
+        if (this->type_name[0] != 'i')
+            throw std::invalid_argument("Type mismatch");
+
+        this->i_value.push_back(value);
+        this->size++;
+    }
+
+    void Append(float value)
+    {
+        if (this->type_name[0] != 'f')
+            throw std::invalid_argument("Type mismatch");
+
+        this->f_value.push_back(value);
+        this->size++;
+    }
+
     void Set(size_t index, bool value)
     {
         if (index < 0 || index >= this->size)
             throw std::out_of_range("Index out of range");
 
         if (this->type_name[0] != 'b')
-            throw std::invalid_argument("Type mismatch");
+            throw std::invalid_argument("Type mismatch | expected bool, got " + this->type_name);
 
         // Sets the value at index to value, resizing if necessary
         if (this->size == 0) {
@@ -60,7 +85,7 @@ public:
             throw std::out_of_range("Index out of range");
 
         if (this->type_name[0] != 'i')
-            throw std::invalid_argument("Type mismatch");
+            throw std::invalid_argument("Type mismatch | expected int, got " + this->type_name);
 
         if (this->size == 0) {
             this->i_value.push_back(value);
@@ -76,7 +101,7 @@ public:
             throw std::out_of_range("Index out of range");
 
         if (this->type_name[0] != 'f')
-            throw std::invalid_argument("Type mismatch");
+            throw std::invalid_argument("Type mismatch | expected float, got " + this->type_name);
 
         if (this->size == 0) {
             this->f_value.push_back(value);
@@ -86,18 +111,38 @@ public:
         return;
     }
 
-    template<typename... Args>
-    std::string GetType(Args... args) const // Returns the type name of the arguments
+    template<typename... T>
+    std::string GetType(T... args) const // Returns the type name of the arguments
     {
-        const char* type_name = get_type_name(&args...);
-        if (strcmp(type_name, "b") == 0)
+
+        std::string_view typeVar = get_type_name(args...);
+
+        if (debug_var == true) {
+            SDL_Log("%s", typeVar.data());
+        }
+
+        // Get only the argument types by offsetting with <find>
+        size_t typeStart = typeVar.find("T = ") + 2;
+        size_t typeEnd = typeVar.find("}");
+        std::string type_name(typeVar.begin() + typeStart, typeVar.begin() + typeEnd);
+
+        std::vector<std::string> type_name_vec = split(type_name, ",");
+
+        if (debug_var == true) {
+            print_vector(type_name_vec);
+        }
+
+        if (type_name.empty())
+            return "null";;
+
+        if (strcmp(type_name_vec[0].c_str(), "bool") == 0)
             return "bool";
-        else if (strcmp(type_name, "i") == 0)
+        else if (strcmp(type_name_vec[0].c_str(), "int") == 0)
             return "int";
-        else if (strcmp(type_name, "f") == 0)
+        else if (strcmp(type_name_vec[0].c_str(), "float") == 0)
             return "float";
 
-        throw std::invalid_argument("Unknown type");
+        throw std::invalid_argument("Unknown type in <Internal_Vector>");
     }
 
     bool GetBool(size_t index) const

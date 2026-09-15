@@ -1,7 +1,7 @@
 [project]
 name = "Havok_of_the_Night"
 version = "0.1.0"
-description = "SDL3 Template"
+description = "Havok of the Night Game"
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
@@ -12,7 +12,7 @@ dependencies = [
 dev = [
     "meson>=1.11.1",
     "cython<=3.1.0",
-    "kivy>=2.3.1",
+    "kivy>=2.3.1; platform_machine == 'x86_64'",
     "pillow>=12.2.0",
     "pygame>=2.6.1",
     "legacy-cgi>=2.6.4",
