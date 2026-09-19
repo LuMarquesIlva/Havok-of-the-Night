@@ -91,8 +91,6 @@ SDL_AppResult SDL_AppIterate(void *appstate)
     return SDL_APP_CONTINUE;  /* carry on with the program! */
 }
 
-/* This function runs once at shutdown. */
-void SDL_AppQuit(void *appstate, SDL_AppResult result)
-{
-    /* SDL will clean up the window/renderer for us. */
+void SDL_AppQuit(void *appstate, SDL_AppResult result) {
+    core.Quit();
 }

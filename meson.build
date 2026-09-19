@@ -15,11 +15,14 @@ sdl3_ttf_dep = dependency('sdl3_ttf')
 sdl3_image_dep = dependency('sdl3_image')
 glfw_dep = dependency('glfw3')
 
+# Argument to force SDL to build opengl
+add_project_arguments('-DSDL_OPENGL=ON', language: 'cpp')
+
 # if you want opencl lib uncomment the <dep> and add it to the dependencies
-#opencl_headers_dep = dependency('opencl-headers')
+opencl_headers_dep = dependency('opencl-headers')
 
 # if you want vulkan lib uncomment it and add the <dep> to the dependencies
-#vulkan_headers_dep = dependency('VulkanHeaders', fallback: 'vulkan-headers')
+vulkan_headers_dep = dependency('VulkanHeaders', fallback: 'vulkan-headers')
 
 if host_machine.system() == 'windows'
   message('SYSTEM IS WINDOWS - using custom win config\n')
@@ -33,7 +36,7 @@ if host_machine.system() == 'windows'
     include_directories: ['include'],
     objects: [res_file],
     c_args: ['-D_WIN32'],
-    dependencies: [sdl3_dep, sdl3_ttf_dep, sdl3_image_dep, glfw_dep],
+    dependencies: [vulkan_headers_dep, sdl3_dep, sdl3_ttf_dep, sdl3_image_dep, glfw_dep, opencl_headers_dep],
   )
 else
 message('SYSTEM IS NOT WINDOWS - not using custom win config\n')
@@ -41,6 +44,6 @@ message('SYSTEM IS NOT WINDOWS - not using custom win config\n')
     meson.project_name(),
     sources: ['src/main.cpp'],
     include_directories: ['include'],
-    dependencies: [sdl3_dep, sdl3_ttf_dep, sdl3_image_dep, glfw_dep],
+    dependencies: [vulkan_headers_dep, sdl3_dep, sdl3_ttf_dep, sdl3_image_dep, glfw_dep, opencl_headers_dep],
   )
 endif

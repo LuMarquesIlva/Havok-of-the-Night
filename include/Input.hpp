@@ -165,7 +165,9 @@ class Input
                             KeyboardKeyState->KeyboardKeys.Set(KeyboardKeyState->KeyboardKeys.GetSize() - 1, 0);
                         }
                     }
-                    SDL_Log("%d", events->key.scancode);
+                    if (debug_var == true) {
+                        SDL_Log("%d", events->key.scancode);
+                    }
                 }
             }
 

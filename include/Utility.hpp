@@ -11,7 +11,7 @@
 #include <SDL3/SDL_log.h>
 
 
-static bool debug_var = true;
+static bool debug_var = false;
 
 template<typename... T>
 constexpr std::string_view get_type_name(T...)

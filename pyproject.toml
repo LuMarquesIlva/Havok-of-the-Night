@@ -12,9 +12,7 @@ dependencies = [
 dev = [
     "meson>=1.11.1",
     "cython<=3.1.0",
-    "kivy>=2.3.1; platform_machine == 'x86_64'",
     "pillow>=12.2.0",
-    "pygame>=2.6.1",
     "legacy-cgi>=2.6.4",
 ]
 
