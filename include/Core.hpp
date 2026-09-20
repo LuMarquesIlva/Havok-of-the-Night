@@ -4,19 +4,28 @@
 #define _USE_VULKAN 1
 #define VK_NO_PROTOTYPES 1
 
-#include <SDL3/SDL.h>
+#include <fstream>
 #include <SDL3/SDL_main.h>
 #include <SDL3/SDL_log.h>
+#include <SDL3/SDL_video.h>
+
+#include "include/Utility.hpp"
 
 #ifdef _USE_VULKAN
     #include <SDL3/SDL_vulkan.h>
     #include <vulkan/vulkan.h>
     #include <vulkan/vulkan_core.h>
+    #include <SDL3/SDL_gpu.h>
 #endif
 
 /* We will use this renderer to draw into this window every frame. */
 static SDL_Window *window = NULL;
+
+#ifndef _USE_VULKAN
 static SDL_Renderer *renderer = NULL;
+#endif
+
+static std::string ShaderFolder = "assets/shaders/";
 
 class Core {
     private:
@@ -30,8 +39,9 @@ class Core {
             VkInstance VK_instance;
             VkSurfaceKHR VK_surface;
 
-        VkApplicationInfo appInfo = {};
-        VkInstanceCreateInfo createInfo = {};
+            VkApplicationInfo appInfo = {};
+            VkInstanceCreateInfo createInfo = {};
+            SDL_GPUDevice* GPUDevice = nullptr;
         #endif
     public:
 
@@ -40,16 +50,14 @@ class Core {
 
         SDL_SetAppMetadata(AppName, "0.1", "com.example.havok-of-the-night");
 
-        if (_USE_VULKAN == 2) {
-            SDL_SetHint(SDL_HINT_RENDER_DRIVER, "opengl");
-        }
+        //SDL_SetHint(SDL_HINT_RENDER_DRIVER, "opengl");
 
         if (!SDL_Init(SDL_INIT_VIDEO)) {
             SDL_Log("Couldn't initialize SDL: %s", SDL_GetError());
             return SDL_APP_FAILURE;
         }
 
-        if (_USE_VULKAN == true) {
+        #ifdef _USE_VULKAN
             SDL_Log("Using VULKAN");
             // Load the Vulkan loader library
             SDL_Vulkan_LoadLibrary(nullptr);
@@ -94,21 +102,35 @@ class Core {
                 return SDL_APP_FAILURE;
             };
 
-        } else if (_USE_VULKAN == false) {
+            GPUDevice = SDL_CreateGPUDevice(SDL_GPU_SHADERFORMAT_SPIRV, false, "vulkan");
+            if (GPUDevice == nullptr) {
+                SDL_Log("Couldn't Create GPU Device: %s", SDL_GetError());
+                return SDL_APP_FAILURE;
+            }
+
+            if (!SDL_ClaimWindowForGPUDevice(GPUDevice, window)) {
+                SDL_Log("Couldn't claim window for GPUDevice: %s", SDL_GetError());
+                return SDL_APP_FAILURE;
+            }
+        #endif
+        #ifndef _USE_VULKAN
             if (!SDL_CreateWindowAndRenderer(AppName, win_W, win_H, SDL_WINDOW_RESIZABLE, &window, &renderer)) {
                 SDL_Log("Couldn't create window/renderer: %s", SDL_GetError());
                 return SDL_APP_FAILURE;
             }
-        }
+        #endif
 
+        #ifndef _USE_VULKAN
         // Disables VSYNC to be compatible with some integrated GPUs
-        if (SDL_SetRenderVSync(renderer, SDL_RENDERER_VSYNC_DISABLED) == false && _USE_VULKAN == false) {
+        if (SDL_SetRenderVSync(renderer, SDL_RENDERER_VSYNC_DISABLED) == false) {
             SDL_Log("Failed to disable VSync: %s", SDL_GetError());
             return SDL_APP_FAILURE;
         }
+        #endif
 
+        #ifndef _USE_VULKAN
         SDL_SetRenderLogicalPresentation(renderer, win_W, win_H, SDL_LOGICAL_PRESENTATION_LETTERBOX);
-
+        #endif
         return SDL_APP_CONTINUE;  /* carry on with the program! */
 
     };
@@ -117,8 +139,38 @@ class Core {
         return window;
     }
 
+    #ifndef _USE_VULKAN
     SDL_Renderer *GetRenderer() {
         return renderer;
+    }
+    #endif
+
+    // Filename is the name
+    const SDL_GPUShader *LoadShader(std::string Filename, SDL_GPUShaderStage ShaderStage) {
+        std::string ShaderFile = ShaderFolder.append(Filename);
+
+        const Uint8* BinaryShaderFile = reinterpret_cast<const uint8_t*>(LoadFile_B(ShaderFile).data());
+
+        SDL_GPUShaderCreateInfo* Shader;
+
+            Shader->code_size = sizeof(BinaryShaderFile);
+            Shader->code = BinaryShaderFile;
+            Shader->entrypoint = "main";
+            Shader->format = SDL_GPU_SHADERFORMAT_SPIRV;
+            Shader->stage = ShaderStage;
+            Shader->num_samplers = 0;
+            Shader->num_storage_textures = 0;
+            Shader->num_storage_buffers = 0;
+            Shader->num_uniform_buffers = 0;
+            Shader->props = 0;
+
+        const SDL_GPUShader* ShaderInstance = SDL_CreateGPUShader(GPUDevice, Shader);
+
+        if (!ShaderInstance) {
+            SDL_Log("Could not create shader instance: %s", SDL_GetError());
+        }
+
+        return ShaderInstance;
     }
 
     /* This function runs once at shutdown. */

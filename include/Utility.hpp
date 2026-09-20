@@ -3,15 +3,33 @@
 #include <cxxabi.h>
 #include <string_view>
 #include <string>
+#include <sstream>
 #include <vector>
 #include <stdexcept>
 #include <iostream>
+#include <fstream>
 
 
 #include <SDL3/SDL_log.h>
 
 
 static bool debug_var = false;
+
+std::vector<char> LoadFile_B(const std::string& filename) {
+    std::ifstream file(filename, std::ios::binary | std::ios::ate);
+        if (!file.is_open()) {
+            return {};
+        }
+
+        std::streamsize size = file.tellg();
+        file.seekg(0, std::ios::beg);
+
+        std::vector<char> buffer(size);
+        if (file.read(buffer.data(), size)) {
+            return buffer;
+        }
+        return {};
+}
 
 template<typename... T>
 constexpr std::string_view get_type_name(T...)

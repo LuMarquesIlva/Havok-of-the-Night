@@ -105,7 +105,13 @@ public:
     }
 
     void Draw() {
+        #ifndef _USE_VULKAN
         SDL_RenderFillRect(core.GetRenderer(), this->GetRect());
+        #endif
+
+        #ifdef _USE_VULKAN
+        SDL_RenderEvent();
+        #endif
     }
 };
 
@@ -117,11 +123,15 @@ public:
     Line(float _ID, float x1, float y1, float x2, float y2) : Object(_ID, x1, y1) {
         this->x2 = x2;
         this->y2 = y2;
+        #ifndef _USE_VULKAN
         SDL_RenderLine(core.GetRenderer(), x, y, x2, y2);
+        #endif
     }
 
     void Draw() {
+        #ifndef _USE_VULKAN
         SDL_RenderLine(core.GetRenderer(), x, y, x2, y2);
+        #endif
     }
 
     void SetEndPosition(float x2, float y2) {
