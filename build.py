@@ -1,8 +1,14 @@
 #!.venv/bin/python
 import subprocess
+import os
 
+ShadersDir = "assets/shaders"
+
+WHITE = '\033[90m'
 RED = '\033[91m'
 GREEN = '\033[92m'
+ORANGE = '\033[93m'
+BLUE = '\033[95m'
 RESET = '\033[0m'
 
 SETTINGSLIST = [
@@ -29,6 +35,16 @@ def run_meson_build(build_dir=SETTINGSLIST[0]):
 
     if SETTINGSLIST[3][1] is True:
         try:
+            for filename in os.listdir(ShadersDir):
+                file_path = os.path.join(ShadersDir, filename)
+                # Check if it is a file to avoid opening directories
+                if os.path.isfile(file_path):
+                    with open(file_path, "r", encoding="utf-8") as f:
+                        #content = f.read()
+                        print(f"\n{BLUE}Compiling Shader {filename}...{RESET}")
+                        shaderCompile_cmd = ['glslc', f'{ShadersDir}/{filename}', '-o', f'{ShadersDir}/SPIR-V/{filename}.spv']
+                        subprocess.run(shaderCompile_cmd, check=True)
+
             preSetup_cmd = ['meson', 'subprojects', 'download']
             print(f"\nRunning: {' '.join(preSetup_cmd)}\n")
             subprocess.run(preSetup_cmd, check=True)

@@ -3,5 +3,7 @@ build/*
 subprojects/*
 icon.ico*
 .venv/
+assets/shaders/SPIR-V/*
 
 !subprojects/*.wrap
+!assets/shaders/SPIR-V/dummy.txt

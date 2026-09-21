@@ -1,15 +1,21 @@
 #pragma once
 
+#include <SDL3/SDL_stdinc.h>
+#include <memory>
 #define SDL_MAIN_USE_CALLBACKS 1  /* use the callbacks instead of main() */
 #define _USE_VULKAN 1
 #define VK_NO_PROTOTYPES 1
 
 #include <fstream>
+#include <vector>
+#include <stdexcept>
+#include <cstdint>
+
 #include <SDL3/SDL_main.h>
 #include <SDL3/SDL_log.h>
 #include <SDL3/SDL_video.h>
 
-#include "include/Utility.hpp"
+#include <include/Utility.hpp>
 
 #ifdef _USE_VULKAN
     #include <SDL3/SDL_vulkan.h>
@@ -42,6 +48,7 @@ class Core {
             VkApplicationInfo appInfo = {};
             VkInstanceCreateInfo createInfo = {};
             SDL_GPUDevice* GPUDevice = nullptr;
+            SDL_GPUCommandBuffer* CM_Buffer;
         #endif
     public:
 
@@ -112,6 +119,13 @@ class Core {
                 SDL_Log("Couldn't claim window for GPUDevice: %s", SDL_GetError());
                 return SDL_APP_FAILURE;
             }
+
+            CM_Buffer = SDL_AcquireGPUCommandBuffer(GPUDevice);
+            if (!CM_Buffer) {
+                SDL_Log("Could Not Aquire Command Buffer: %s", SDL_GetError());
+                return SDL_APP_FAILURE;
+            }
+
         #endif
         #ifndef _USE_VULKAN
             if (!SDL_CreateWindowAndRenderer(AppName, win_W, win_H, SDL_WINDOW_RESIZABLE, &window, &renderer)) {
@@ -147,27 +161,50 @@ class Core {
 
     // Filename is the name
     const SDL_GPUShader *LoadShader(std::string Filename, SDL_GPUShaderStage ShaderStage) {
-        std::string ShaderFile = ShaderFolder.append(Filename);
+        std::string ShaderFolderTmp = ShaderFolder;
+        std::string ShaderFile = ShaderFolderTmp.append("SPIR-V/" + Filename + ".spv");
 
-        const Uint8* BinaryShaderFile = reinterpret_cast<const uint8_t*>(LoadFile_B(ShaderFile).data());
+        SDL_Log("%s", ShaderFile.c_str());
 
-        SDL_GPUShaderCreateInfo* Shader;
+        size_t ShaderFileSize = 0;
+        const Uint8* BinaryShaderFile = load_spirv_file(ShaderFile.c_str(), &ShaderFileSize);
 
-            Shader->code_size = sizeof(BinaryShaderFile);
-            Shader->code = BinaryShaderFile;
-            Shader->entrypoint = "main";
-            Shader->format = SDL_GPU_SHADERFORMAT_SPIRV;
-            Shader->stage = ShaderStage;
-            Shader->num_samplers = 0;
-            Shader->num_storage_textures = 0;
-            Shader->num_storage_buffers = 0;
-            Shader->num_uniform_buffers = 0;
-            Shader->props = 0;
+        const SDL_GPUShader* ShaderInstance;
 
-        const SDL_GPUShader* ShaderInstance = SDL_CreateGPUShader(GPUDevice, Shader);
+        if (ShaderStage == SDL_GPU_SHADERSTAGE_VERTEX) {
+            SDL_GPUShaderCreateInfo ShaderTmp = {
+                .code_size = ShaderFileSize,
+                .code = BinaryShaderFile,
+                .entrypoint = "main",
+                .format = SDL_GPU_SHADERFORMAT_SPIRV,
+                .stage = ShaderStage,
+                .num_samplers = 0,
+                .num_storage_textures = 0,
+                .num_storage_buffers = 0,
+                .num_uniform_buffers = 0,
+                .props = 0,
+            };
+            ShaderInstance = SDL_CreateGPUShader(GPUDevice, &ShaderTmp);
+        } else if (ShaderStage == SDL_GPU_SHADERSTAGE_FRAGMENT) {
+            SDL_GPUShaderCreateInfo ShaderTmp = {
+                .code_size = ShaderFileSize,
+                .code = BinaryShaderFile,
+                .entrypoint = "main",
+                .format = SDL_GPU_SHADERFORMAT_SPIRV,
+                .stage = ShaderStage,
+                .num_samplers = 2,
+                .num_storage_textures = 2,
+                .num_storage_buffers = 2,
+                .num_uniform_buffers = 3,
+                .props = 0,
+            };
+            ShaderInstance = SDL_CreateGPUShader(GPUDevice, &ShaderTmp);
+        } else {
+            SDL_Log("Could Not Find ShaderStage Property");
+        }
 
         if (!ShaderInstance) {
-            SDL_Log("Could not create shader instance: %s", SDL_GetError());
+            SDL_Log("Could not create shader instance for %s: %s", ShaderFile.c_str(), SDL_GetError());
         }
 
         return ShaderInstance;

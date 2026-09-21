@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cstdint>
 #include <cxxabi.h>
 #include <string_view>
 #include <string>
@@ -15,7 +16,31 @@
 
 static bool debug_var = false;
 
-std::vector<char> LoadFile_B(const std::string& filename) {
+uint8_t* load_spirv_file(const char* filename, size_t* out_size) {
+    // Open file in binary mode
+    std::ifstream file(filename, std::ios::binary | std::ios::ate);
+    if (!file.is_open()) {
+        throw std::runtime_error(std::string("Failed to open file: ") + filename);
+    }
+
+    // Get file size
+    std::streampos size = file.tellg();
+    file.seekg(0, std::ios::beg);
+
+    // Allocate memory for uint8_t array
+    uint8_t* buffer = new uint8_t[size];
+
+    // Read binary data
+    if (file.read(reinterpret_cast<char*>(buffer), size)) {
+        *out_size = static_cast<size_t>(size);
+        return buffer;
+    } else {
+        delete[] buffer;
+        throw std::runtime_error("Failed to read file contents");
+    }
+}
+
+std::vector<Uint8*> LoadFile_B(const std::string& filename) {
     std::ifstream file(filename, std::ios::binary | std::ios::ate);
         if (!file.is_open()) {
             return {};
@@ -24,8 +49,8 @@ std::vector<char> LoadFile_B(const std::string& filename) {
         std::streamsize size = file.tellg();
         file.seekg(0, std::ios::beg);
 
-        std::vector<char> buffer(size);
-        if (file.read(buffer.data(), size)) {
+        std::vector<Uint8*> buffer(size);
+        if (file.read(reinterpret_cast<char*>(buffer.data()), size)) {
             return buffer;
         }
         return {};

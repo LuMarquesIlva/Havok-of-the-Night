@@ -15,8 +15,8 @@ Input::Keyboard _Keyboard;
 SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[])
 {
     SDL_AppResult APP_RES = core.Init();
-    const SDL_GPUShader* TriangeV = core.LoadShader("triangle", SDL_GPU_SHADERSTAGE_VERTEX);
-    const SDL_GPUShader* TriangeF = core.LoadShader("triangle", SDL_GPU_SHADERSTAGE_FRAGMENT);
+    const SDL_GPUShader* TriangeV = core.LoadShader("triangle.vert", SDL_GPU_SHADERSTAGE_VERTEX);
+    const SDL_GPUShader* TriangeF = core.LoadShader("triangle.frag", SDL_GPU_SHADERSTAGE_FRAGMENT);
     return APP_RES;
 
 }
@@ -75,23 +75,38 @@ SDL_AppResult SDL_AppEvent(void *appstate, SDL_Event *event)
 SDL_AppResult SDL_AppIterate(void *appstate)
 {
     #ifndef _USE_VULKAN
-    //const double now = ((double)SDL_GetTicks()) / 1000.0;  /* convert from milliseconds to seconds. */
+        //const double now = ((double)SDL_GetTicks()) / 1000.0;  /* convert from milliseconds to seconds. */
 
-    SDL_SetRenderDrawColorFloat(core.GetRenderer(), 0.3, 0.3, 0.3, SDL_ALPHA_OPAQUE_FLOAT);  /* new color, full alpha. */
+        SDL_SetRenderDrawColorFloat(core.GetRenderer(), 0.3, 0.3, 0.3, SDL_ALPHA_OPAQUE_FLOAT);  /* new color, full alpha. */
 
-    /* clear the window to the draw color. */
-    SDL_RenderClear(core.GetRenderer());
+        /* clear the window to the draw color. */
+        SDL_RenderClear(core.GetRenderer());
 
-    SDL_SetRenderDrawColorFloat(core.GetRenderer(), 0.2, 0.5, 0.8, SDL_ALPHA_OPAQUE_FLOAT);
+        SDL_SetRenderDrawColorFloat(core.GetRenderer(), 0.2, 0.5, 0.8, SDL_ALPHA_OPAQUE_FLOAT);
 
-    obj.Draw();
+        obj.Draw();
 
-    SDL_SetRenderDrawColorFloat(core.GetRenderer(), 0.6, 0.8, 0.8, SDL_ALPHA_OPAQUE_FLOAT);
+        SDL_SetRenderDrawColorFloat(core.GetRenderer(), 0.6, 0.8, 0.8, SDL_ALPHA_OPAQUE_FLOAT);
 
-    line.Draw();
+        line.Draw();
 
-    /* put the newly-cleared rendering on the screen. */
-    SDL_RenderPresent(core.GetRenderer());
+        /* put the newly-cleared rendering on the screen. */
+        SDL_RenderPresent(core.GetRenderer());
+    #endif
+
+    #ifdef _USE_VULKAN
+
+    #TODO: Create Graphics Pipeline (Understand first actually)
+
+    SDL_GPUGraphicsPipelineCreateInfo GPUInfo = {
+        .vertex_shader = &TriangeV,
+        .fragment_shader = &TriangleF,
+
+    }
+    SDL_GPUGraphicsPipeline* GPUPipeline = SDL_CreateGPUGraphicsPipeline(core.GPUDevice, );
+
+
+
     #endif
 
     return SDL_APP_CONTINUE;  /* carry on with the program! */
