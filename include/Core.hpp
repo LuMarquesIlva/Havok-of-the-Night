@@ -1,21 +1,21 @@
 #pragma once
 
-#include <SDL3/SDL_stdinc.h>
-#include <memory>
 #define SDL_MAIN_USE_CALLBACKS 1  /* use the callbacks instead of main() */
-#define _USE_VULKAN 1
+//#define _USE_VULKAN
 #define VK_NO_PROTOTYPES 1
 
-#include <fstream>
-#include <vector>
-#include <stdexcept>
-#include <cstdint>
+#include <string>
 
+#include <SDL3/SDL_stdinc.h>
 #include <SDL3/SDL_main.h>
 #include <SDL3/SDL_log.h>
 #include <SDL3/SDL_video.h>
 
-#include <include/Utility.hpp>
+#ifndef _USE_VULKAN
+    #include <SDL3/SDL_render.h>
+#endif
+
+#include "Utility.hpp"
 
 #ifdef _USE_VULKAN
     #include <SDL3/SDL_vulkan.h>
@@ -24,22 +24,33 @@
     #include <SDL3/SDL_gpu.h>
 #endif
 
+
+
 /* We will use this renderer to draw into this window every frame. */
 static SDL_Window *window = NULL;
 
 #ifndef _USE_VULKAN
-static SDL_Renderer *renderer = NULL;
+    static SDL_Renderer *renderer = NULL;
 #endif
 
 static std::string ShaderFolder = "assets/shaders/";
 
+static const char *AppName = "Havok of the Night";
+
+static int win_H = 480;
+static int win_W = 640;
+
+#ifdef _USE_VULKAN
+    static SDL_GPUDevice* GPUDevice = nullptr;
+
+    struct Havok_Shader {
+        const char* Name;
+        const SDL_GPUShader* ShaderData;
+    };
+#endif
+
 class Core {
     private:
-
-        const char *AppName = "Havok of the Night";
-
-        int win_H = 480;
-        int win_W = 640;
 
         #ifdef _USE_VULKAN
             VkInstance VK_instance;
@@ -47,13 +58,14 @@ class Core {
 
             VkApplicationInfo appInfo = {};
             VkInstanceCreateInfo createInfo = {};
-            SDL_GPUDevice* GPUDevice = nullptr;
             SDL_GPUCommandBuffer* CM_Buffer;
+
+            std::vector<Havok_Shader> LoadedShaderList;
         #endif
     public:
 
     /* This function runs once at startup. */
-    SDL_AppResult Init() {
+    static SDL_AppResult Init() {
 
         SDL_SetAppMetadata(AppName, "0.1", "com.example.havok-of-the-night");
 
@@ -125,102 +137,130 @@ class Core {
                 SDL_Log("Could Not Aquire Command Buffer: %s", SDL_GetError());
                 return SDL_APP_FAILURE;
             }
-
         #endif
         #ifndef _USE_VULKAN
             if (!SDL_CreateWindowAndRenderer(AppName, win_W, win_H, SDL_WINDOW_RESIZABLE, &window, &renderer)) {
                 SDL_Log("Couldn't create window/renderer: %s", SDL_GetError());
                 return SDL_APP_FAILURE;
             }
-        #endif
 
-        #ifndef _USE_VULKAN
-        // Disables VSYNC to be compatible with some integrated GPUs
-        if (SDL_SetRenderVSync(renderer, SDL_RENDERER_VSYNC_DISABLED) == false) {
-            SDL_Log("Failed to disable VSync: %s", SDL_GetError());
-            return SDL_APP_FAILURE;
-        }
-        #endif
+            // Disables VSYNC to be compatible with some integrated GPUs
+            if (SDL_SetRenderVSync(renderer, SDL_RENDERER_VSYNC_DISABLED) == false) {
+                SDL_Log("Failed to disable VSync: %s", SDL_GetError());
+                return SDL_APP_FAILURE;
+            }
 
-        #ifndef _USE_VULKAN
-        SDL_SetRenderLogicalPresentation(renderer, win_W, win_H, SDL_LOGICAL_PRESENTATION_LETTERBOX);
+            SDL_SetRenderLogicalPresentation(renderer, win_W, win_H, SDL_LOGICAL_PRESENTATION_LETTERBOX);
         #endif
         return SDL_APP_CONTINUE;  /* carry on with the program! */
 
     };
 
-    SDL_Window *GetWindow() {
+    static SDL_Window *GetWindow() {
         return window;
     }
 
-    #ifndef _USE_VULKAN
-    SDL_Renderer *GetRenderer() {
-        return renderer;
+    static const char *GetAppName() {
+        return AppName;
     }
+
+    static int GetWindowWidth() {
+        return win_W;
+    }
+
+    static int GetWindowHeight() {
+        return win_H;
+    }
+
+    #ifndef _USE_VULKAN
+        static SDL_Renderer *GetRenderer() {
+            return renderer;
+        }
     #endif
 
-    // Filename is the name
-    const SDL_GPUShader *LoadShader(std::string Filename, SDL_GPUShaderStage ShaderStage) {
-        std::string ShaderFolderTmp = ShaderFolder;
-        std::string ShaderFile = ShaderFolderTmp.append("SPIR-V/" + Filename + ".spv");
+    #ifdef _USE_VULKAN
+        // Filename is the name
+        const SDL_GPUShader *LoadShader(const char* ShaderName, std::string Filename, SDL_GPUShaderStage ShaderStage) {
+            std::string ShaderFolderTmp = ShaderFolder;
+            std::string ShaderFile = ShaderFolderTmp.append("SPIR-V/" + Filename + ".spv");
 
-        SDL_Log("%s", ShaderFile.c_str());
+            SDL_Log("%s", ShaderFile.c_str());
 
-        size_t ShaderFileSize = 0;
-        const Uint8* BinaryShaderFile = load_spirv_file(ShaderFile.c_str(), &ShaderFileSize);
+            size_t ShaderFileSize = 0;
+            const Uint8* BinaryShaderFile = load_spirv_file(ShaderFile.c_str(), &ShaderFileSize);
 
-        const SDL_GPUShader* ShaderInstance;
+            const SDL_GPUShader* ShaderInstance;
 
-        if (ShaderStage == SDL_GPU_SHADERSTAGE_VERTEX) {
-            SDL_GPUShaderCreateInfo ShaderTmp = {
-                .code_size = ShaderFileSize,
-                .code = BinaryShaderFile,
-                .entrypoint = "main",
-                .format = SDL_GPU_SHADERFORMAT_SPIRV,
-                .stage = ShaderStage,
-                .num_samplers = 0,
-                .num_storage_textures = 0,
-                .num_storage_buffers = 0,
-                .num_uniform_buffers = 0,
-                .props = 0,
-            };
-            ShaderInstance = SDL_CreateGPUShader(GPUDevice, &ShaderTmp);
-        } else if (ShaderStage == SDL_GPU_SHADERSTAGE_FRAGMENT) {
-            SDL_GPUShaderCreateInfo ShaderTmp = {
-                .code_size = ShaderFileSize,
-                .code = BinaryShaderFile,
-                .entrypoint = "main",
-                .format = SDL_GPU_SHADERFORMAT_SPIRV,
-                .stage = ShaderStage,
-                .num_samplers = 2,
-                .num_storage_textures = 2,
-                .num_storage_buffers = 2,
-                .num_uniform_buffers = 3,
-                .props = 0,
-            };
-            ShaderInstance = SDL_CreateGPUShader(GPUDevice, &ShaderTmp);
-        } else {
-            SDL_Log("Could Not Find ShaderStage Property");
+            if (ShaderStage == SDL_GPU_SHADERSTAGE_VERTEX) {
+                SDL_GPUShaderCreateInfo ShaderTmp = {
+                    .code_size = ShaderFileSize,
+                    .code = BinaryShaderFile,
+                    .entrypoint = "main",
+                    .format = SDL_GPU_SHADERFORMAT_SPIRV,
+                    .stage = ShaderStage,
+                    .num_samplers = 0,
+                    .num_storage_textures = 0,
+                    .num_storage_buffers = 0,
+                    .num_uniform_buffers = 0,
+                    .props = 0,
+                };
+                ShaderInstance = SDL_CreateGPUShader(GPUDevice, &ShaderTmp);
+            } else if (ShaderStage == SDL_GPU_SHADERSTAGE_FRAGMENT) {
+                SDL_GPUShaderCreateInfo ShaderTmp = {
+                    .code_size = ShaderFileSize,
+                    .code = BinaryShaderFile,
+                    .entrypoint = "main",
+                    .format = SDL_GPU_SHADERFORMAT_SPIRV,
+                    .stage = ShaderStage,
+                    .num_samplers = 2,
+                    .num_storage_textures = 2,
+                    .num_storage_buffers = 2,
+                    .num_uniform_buffers = 3,
+                    .props = 0,
+                };
+                ShaderInstance = SDL_CreateGPUShader(GPUDevice, &ShaderTmp);
+            } else {
+                SDL_Log("Could Not Find ShaderStage Property");
+            }
+
+            if (!ShaderInstance) {
+                SDL_Log("Could not create shader instance for %s: %s", ShaderFile.c_str(), SDL_GetError());
+            }
+
+            Havok_Shader EndValue = {ShaderName, ShaderInstance};
+
+            LoadedShaderList.push_back(EndValue);
+
+            return ShaderInstance;
         }
 
-        if (!ShaderInstance) {
-            SDL_Log("Could not create shader instance for %s: %s", ShaderFile.c_str(), SDL_GetError());
+        SDL_GPUShader* GetShaderFromLoaded(const char* ShaderName)
+        {
+            for (size_t i = 0; i < LoadedShaderList.size(); i++) {
+                Havok_Shader Shader = LoadedShaderList.at(i);
+                if (Shader.Name == ShaderName) {
+                    return (SDL_GPUShader*)Shader.ShaderData;
+                } else {
+                    return nullptr;
+                }
+            }
+            return nullptr;
         }
 
-        return ShaderInstance;
-    }
+        static SDL_GPUDevice* GetGPUDevice() {
+            return GPUDevice;
+        }
+    #endif
 
     /* This function runs once at shutdown. */
-    void Quit()
+    static void Quit()
     {
-        if (_USE_VULKAN == true) {
+        #ifdef _USE_VULKAN
             SDL_Vulkan_DestroySurface(VK_instance, VK_surface, NULL);
             SDL_DestroyWindow(window);
             SDL_Vulkan_UnloadLibrary();
             SDL_Quit();
-        } else if (_USE_VULKAN == false) {
-            ;
-        }
+        #endif
     }
 
 };

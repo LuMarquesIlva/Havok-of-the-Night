@@ -3,6 +3,36 @@ import subprocess
 import os
 
 ShadersDir = "assets/shaders"
+ForceSubprojectDownload = False
+ForceBuildDir = False
+
+def IsFolderEmpty(Folder:str):
+    for filename in os.listdir(Folder):
+        return False
+    return True
+
+def IsSubprojectFolderEmpty():
+    NotWrapFile = False
+    for filename in os.listdir("subprojects"):
+        if filename.endswith(".wrap") or filename.endswith(".wraplock"):
+            #print(f"Found {filename}, skipping...")
+            continue
+        else:
+            NotWrapFile = True
+            if NotWrapFile:
+                return False
+    return True
+
+def CompileShaders():
+    for filename in os.listdir(ShadersDir):
+        file_path = os.path.join(ShadersDir, filename)
+        # Check if it is a file to avoid opening directories
+        if os.path.isfile(file_path):
+            with open(file_path, "r", encoding="utf-8") as f:
+                #content = f.read()
+                print(f"\n{BLUE}Compiling Shader {filename}...{RESET}")
+                shaderCompile_cmd = ['glslc', f'{ShadersDir}/{filename}', '-o', f'{ShadersDir}/SPIR-V/{filename}.spv']
+                subprocess.run(shaderCompile_cmd, check=True)
 
 WHITE = '\033[90m'
 RED = '\033[91m'
@@ -33,18 +63,12 @@ def run_meson_build(build_dir=SETTINGSLIST[0]):
       {SETTINGSLIST[2][0]} : {SETTINGSLIST[2][1]}
       {SETTINGSLIST[3][0]} : {SETTINGSLIST[3][1]}""")
 
+    if not IsSubprojectFolderEmpty() and not ForceSubprojectDownload:
+        print(f"\n{ORANGE}Subprojects folder is not empty, skipping download...{RESET}")
+        SETTINGSLIST[3][1] = False
+
     if SETTINGSLIST[3][1] is True:
         try:
-            for filename in os.listdir(ShadersDir):
-                file_path = os.path.join(ShadersDir, filename)
-                # Check if it is a file to avoid opening directories
-                if os.path.isfile(file_path):
-                    with open(file_path, "r", encoding="utf-8") as f:
-                        #content = f.read()
-                        print(f"\n{BLUE}Compiling Shader {filename}...{RESET}")
-                        shaderCompile_cmd = ['glslc', f'{ShadersDir}/{filename}', '-o', f'{ShadersDir}/SPIR-V/{filename}.spv']
-                        subprocess.run(shaderCompile_cmd, check=True)
-
             preSetup_cmd = ['meson', 'subprojects', 'download']
             print(f"\nRunning: {' '.join(preSetup_cmd)}\n")
             subprocess.run(preSetup_cmd, check=True)
@@ -53,9 +77,15 @@ def run_meson_build(build_dir=SETTINGSLIST[0]):
 
     if SETTINGSLIST[1][1] is False and SETTINGSLIST[2][1] is False:
         try:
-            setup_cmd = ['meson', 'setup', SETTINGSLIST[0][1]]
-            print(f"\nRunning: {RED}{' '.join(setup_cmd)}{RESET}\n")
-            subprocess.run(setup_cmd, check=True)
+            print(f"\n{ORANGE}Compiling Shaders...{RESET}")
+            CompileShaders()
+
+            if IsFolderEmpty(SETTINGSLIST[0][1]) or ForceBuildDir:
+                setup_cmd = ['meson', 'setup', SETTINGSLIST[0][1]]
+                print(f"\nRunning: {RED}{' '.join(setup_cmd)}{RESET}\n")
+                subprocess.run(setup_cmd, check=True)
+            else:
+                print(f"\n{ORANGE}Build directory is not empty, skipping setup...\nIf you want to force a setup, change the ForceBuildDir flag to True{RESET}")
         finally:
             print(f"\n{GREEN}-- Project Configured --{RESET}")
     elif SETTINGSLIST[1][1] is True:

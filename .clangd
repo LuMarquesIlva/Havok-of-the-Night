@@ -1,4 +1,0 @@
-CompileFlags:
-  Add:
-    - "-I/include"
-    -  "-I/subprojects/SDL3-3.4.2/include/SDL3"

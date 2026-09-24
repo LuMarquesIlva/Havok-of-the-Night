@@ -1,11 +1,12 @@
 #define SDL_MAIN_USE_CALLBACKS 1  /* use the callbacks instead of main() */
+//#define _USE_VULKAN /* Uncomment to Use Vulkan */
 
 #include <SDL3/SDL_events.h>
 #include <SDL3/SDL_main.h>
 
-#include "include/Core.hpp"
-#include "include/Entity.hpp"
-#include "include/Input.hpp"
+#include "Core.hpp"
+#include "Entity.hpp"
+#include "Input.hpp"
 
 Vector2 vec2 = Vector2(60.0, 40.0);
 Input input;
@@ -14,9 +15,46 @@ Input::Keyboard _Keyboard;
 
 SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[])
 {
-    SDL_AppResult APP_RES = core.Init();
-    const SDL_GPUShader* TriangeV = core.LoadShader("triangle.vert", SDL_GPU_SHADERSTAGE_VERTEX);
-    const SDL_GPUShader* TriangeF = core.LoadShader("triangle.frag", SDL_GPU_SHADERSTAGE_FRAGMENT);
+    SDL_AppResult APP_RES = Core::Init();
+
+    #ifdef _USE_VULKAN
+        const SDL_GPUShader* TriangleV = Core.LoadShader("TriangleV", "triangle.vert", SDL_GPU_SHADERSTAGE_VERTEX);
+        const SDL_GPUShader* TriangleF = Core.LoadShader("TriangleF", "triangle.frag", SDL_GPU_SHADERSTAGE_FRAGMENT);
+
+        SDL_GPURasterizerState RasterState = {
+            SDL_GPU_FILLMODE_FILL,
+            SDL_GPU_CULLMODE_NONE,
+            SDL_GPU_FRONTFACE_CLOCKWISE
+        };
+        SDL_GPUMultisampleState MultisampleState = {
+            SDL_GPU_SAMPLECOUNT_1,
+            0,
+            false,
+            true
+        };
+        SDL_GPUStencilOpState StencilOpState = {
+            SDL_GPU_STENCILOP_ZERO,
+            SDL_GPU_STENCILOP_ZERO,
+            SDL_GPU_STENCILOP_ZERO
+        };
+        SDL_GPUDepthStencilState DepthStencilState = {
+            SDL_GPU_COMPAREOP_LESS,
+            StencilOpState,
+            StencilOpState,
+            0
+        };
+        SDL_GPUColorTargetDescription ColorTarget = {
+            SDL_GPU_TEXTUREFORMAT_BC1_RGBA_UNORM,
+        };
+        SDL_GPUGraphicsPipelineTargetInfo TargetInfo = {
+            &ColorTarget,
+            256,
+            SDL_GPU_TEXTUREFORMAT_BC1_RGBA_UNORM,
+            true,
+        };
+        SDL_GPUGraphicsPipeline GPUPipeline(&TriangleV, &TriangleF, SDL_GPU_PRIMITIVETYPE_POINTLIST, RasterState, MultisampleState, DepthStencilState, TargetInfo);
+    #endif
+
     return APP_RES;
 
 }
@@ -77,33 +115,26 @@ SDL_AppResult SDL_AppIterate(void *appstate)
     #ifndef _USE_VULKAN
         //const double now = ((double)SDL_GetTicks()) / 1000.0;  /* convert from milliseconds to seconds. */
 
-        SDL_SetRenderDrawColorFloat(core.GetRenderer(), 0.3, 0.3, 0.3, SDL_ALPHA_OPAQUE_FLOAT);  /* new color, full alpha. */
+        SDL_SetRenderDrawColorFloat(Core::GetRenderer(), 0.3, 0.3, 0.3, SDL_ALPHA_OPAQUE_FLOAT);  /* new color, full alpha. */
 
         /* clear the window to the draw color. */
-        SDL_RenderClear(core.GetRenderer());
+        SDL_RenderClear(Core::GetRenderer());
 
-        SDL_SetRenderDrawColorFloat(core.GetRenderer(), 0.2, 0.5, 0.8, SDL_ALPHA_OPAQUE_FLOAT);
+        SDL_SetRenderDrawColorFloat(Core::GetRenderer(), 0.2, 0.5, 0.8, SDL_ALPHA_OPAQUE_FLOAT);
 
         obj.Draw();
 
-        SDL_SetRenderDrawColorFloat(core.GetRenderer(), 0.6, 0.8, 0.8, SDL_ALPHA_OPAQUE_FLOAT);
+        SDL_SetRenderDrawColorFloat(Core::GetRenderer(), 0.6, 0.8, 0.8, SDL_ALPHA_OPAQUE_FLOAT);
 
         line.Draw();
 
         /* put the newly-cleared rendering on the screen. */
-        SDL_RenderPresent(core.GetRenderer());
+        SDL_RenderPresent(Core::GetRenderer());
     #endif
 
     #ifdef _USE_VULKAN
 
-    #TODO: Create Graphics Pipeline (Understand first actually)
-
-    SDL_GPUGraphicsPipelineCreateInfo GPUInfo = {
-        .vertex_shader = &TriangeV,
-        .fragment_shader = &TriangleF,
-
-    }
-    SDL_GPUGraphicsPipeline* GPUPipeline = SDL_CreateGPUGraphicsPipeline(core.GPUDevice, );
+    //TODO: Create Graphics Pipeline (Understand first actually)
 
 
 
@@ -113,5 +144,5 @@ SDL_AppResult SDL_AppIterate(void *appstate)
 }
 
 void SDL_AppQuit(void *appstate, SDL_AppResult result) {
-    core.Quit();
+    Core::Quit();
 }

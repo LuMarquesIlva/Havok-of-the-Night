@@ -1,11 +1,12 @@
 #pragma once
 
 #include <cstddef>
-#include <type_traits>
 #include <vector>
 #include <iostream>
 #include <stdexcept>
 #include <string>
+
+#include <type_traits>
 
 #include "Utility.hpp"
 
@@ -126,10 +127,10 @@ public:
         size_t typeEnd = typeVar.find("}");
         std::string type_name(typeVar.begin() + typeStart, typeVar.begin() + typeEnd);
 
-        std::vector<std::string> type_name_vec = split(type_name, ",");
+        std::vector<std::string> type_name_vec = Utility::split(type_name, ",");
 
         if (debug_var == true) {
-            print_vector(type_name_vec);
+            Utility::print_vector(type_name_vec);
         }
 
         if (type_name.empty())

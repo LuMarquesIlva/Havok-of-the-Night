@@ -6,8 +6,6 @@
 #include "Core.hpp"
 #include "VectorFuncs.hpp"
 
-Core core;
-
 class Object {
 public:
     float ID = 0;
@@ -46,7 +44,7 @@ public:
     void SetPosition_Relative(float dx, float dy) {
         int WinSize_x;
         int WinSize_y;
-        SDL_GetWindowSize(core.GetWindow(), &WinSize_x, &WinSize_y);
+        SDL_GetWindowSize(Core::GetWindow(), &WinSize_x, &WinSize_y);
 
         this->position.x += dx / WinSize_x;
         this->position.y += dy / WinSize_y;
@@ -106,7 +104,7 @@ public:
 
     void Draw() {
         #ifndef _USE_VULKAN
-        SDL_RenderFillRect(core.GetRenderer(), this->GetRect());
+        SDL_RenderFillRect(Core::GetRenderer(), this->GetRect());
         #endif
 
         #ifdef _USE_VULKAN
@@ -124,13 +122,13 @@ public:
         this->x2 = x2;
         this->y2 = y2;
         #ifndef _USE_VULKAN
-        SDL_RenderLine(core.GetRenderer(), x, y, x2, y2);
+        SDL_RenderLine(Core::GetRenderer(), x, y, x2, y2);
         #endif
     }
 
     void Draw() {
         #ifndef _USE_VULKAN
-        SDL_RenderLine(core.GetRenderer(), x, y, x2, y2);
+        SDL_RenderLine(Core::GetRenderer(), x, y, x2, y2);
         #endif
     }
 
