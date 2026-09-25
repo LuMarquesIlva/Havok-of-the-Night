@@ -6,8 +6,6 @@
 #include <stdexcept>
 #include <string>
 
-#include <type_traits>
-
 #include "Utility.hpp"
 
 
@@ -176,29 +174,81 @@ public:
 
 class Vector2
 {
-public:
-    float x = 0.0;
-    float y = 0.0;
+    private:
+        std::tuple<float, float> _vector;
+    public:
 
-    // Vector Class Constructor: Uses the two values to create a Vector2 type;
-    // the values can be accessed trought Vector2.x and Vector2.y
-    Vector2(float value1=0.0, float value2=0.0) : x(value1), y(value2)
-    {
-        try {
-            std::vector<float> Vector2(value1, value2);
-        } catch (const std::length_error& e) {
-            std::cerr << "Vector size exceeds theoretical max: " << e.what() << " -> Zeroing\n";
-            value1 = 0.0f;
-            value2 = 0.0f;
+        float _x = std::get<0>(_vector);
+        float _y = std::get<1>(_vector);
+
+        // Vector Class Constructor: Uses the two values to create a Vector2 type;
+        // the values can be accessed trought Vector2.x and Vector2.y
+        Vector2(float value1, float value2) : _vector(std::make_tuple(value1, value2))
+        {
+            try {
+                std::tuple<float, float> Vector2(value1, value2);
+            } catch (const std::length_error& e) {
+                std::cerr << "Vector size exceeds theoretical max: " << e.what() << " -> Zeroing\n";
+                value1 = 0.0f;
+                value2 = 0.0f;
+            }
+        };
+
+        Vector2() : _vector(0.0f, 0.0f) {}
+
+        Vector2 operator+=(float rhs) const {
+            return Vector2(this->_x + rhs, this->_y + rhs);
         }
-    };
 
-    Vector2 operator+=(float rhs) const {
-        return Vector2(this->x + rhs, this->y + rhs);
-    }
+        Vector2 operator+=(const Vector2& rhs) const {
+            return Vector2(this->_x + rhs._x, this->_y + rhs._y);
+        }
 
-    Vector2 operator+=(const Vector2& rhs) const {
-        return Vector2(this->x + rhs.x, this->y + rhs.y);
-    }
+};
 
+class Vector3
+{
+    private:
+        std::tuple<float, float, float> _vector;
+    public:
+        float x = std::get<0>(_vector);
+        float y = std::get<1>(_vector);
+        float z = std::get<2>(_vector);
+
+        // Vector Class Constructor: Uses the two values to create a Vector2 type;
+        // the values can be accessed trought Vector2.x and Vector2.y
+        Vector3(float value1, float value2, float value3) : _vector(value1, value2, value3)
+        {
+            try {
+                _vector = std::make_tuple(value1, value2, value3);
+            } catch (const std::length_error& e) {
+                std::cerr << "Vector size exceeds theoretical max: " << e.what() << " -> Zeroing\n";
+                _vector = std::make_tuple(0.0f, 0.0f, 0.0f);
+            }
+        };
+
+        Vector3() : _vector(0.0f, 0.0f, 0.0f) {}
+
+        bool operator!=(const Vector3& rhs) {
+            return _vector != rhs._vector;
+        }
+
+        Vector3 operator=(const Vector3& rhs) {
+            _vector = rhs._vector;
+            return *this;
+        }
+
+        Vector3 operator+=(float rhs) {
+            _vector = std::make_tuple(std::get<0>(_vector) + rhs, std::get<1>(_vector) + rhs, std::get<2>(_vector) + rhs);
+            return *this;
+        }
+
+        Vector3 operator+=(const Vector3& rhs) {
+            _vector = std::make_tuple(std::get<0>(_vector) + rhs.x, std::get<1>(_vector) + rhs.y, std::get<2>(_vector) + rhs.z);
+            return *this;
+        }
+
+        float operator[](int index) const {
+            return (index == 0) ? std::get<0>(_vector) : (index == 1) ? std::get<1>(_vector) : std::get<2>(_vector);
+        }
 };

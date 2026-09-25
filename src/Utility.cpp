@@ -1,10 +1,12 @@
-#include "Utility.hpp"
+#include "../include/Utility.hpp"
 
 #include <cxxabi.h>
-#include <fstream>
-#include <string_view>
 #include <string>
 #include <vector>
+#include <iostream>
+#include <fstream>
+#include <memory>
+#include <stdexcept>
 
 #ifdef _USE_VULKAN
     static uint8_t* Utility::load_spirv_file(const char* filename, size_t* out_size) {

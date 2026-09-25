@@ -4,7 +4,6 @@
 #include <string_view>
 #include <string>
 #include <vector>
-#include <iostream>
 
 #include <SDL3/SDL_log.h>
 

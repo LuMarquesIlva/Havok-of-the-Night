@@ -4,9 +4,11 @@
 #include <SDL3/SDL_events.h>
 #include <SDL3/SDL_main.h>
 
-#include "Core.hpp"
-#include "Entity.hpp"
-#include "Input.hpp"
+#include "../include/Core.hpp"
+#include "../include/Entity.hpp"
+#include "../include/Input.hpp"
+
+#include "../include/VectorFuncs.hpp"
 
 Vector2 vec2 = Vector2(60.0, 40.0);
 Input input;
@@ -72,8 +74,7 @@ SDL_AppResult SDL_AppEvent(void *appstate, SDL_Event *event)
     _Mouse.UpdateMouse(event);
 
     if (_Mouse.IsMouseButtonDown(0) == true) {
-        //SDL_Log("Mouse Button 0 Down");
-        line.SetEndPosition(event->button.x, event->button.y);
+        line.SetEndPosition(event->motion.x, event->motion.y);
     }
 
     _Keyboard.Update(event);
@@ -83,18 +84,16 @@ SDL_AppResult SDL_AppEvent(void *appstate, SDL_Event *event)
 
         switch (event->key.key) {
         case SDL_Keycode(SDLK_W):
-            obj.Move(0.0f, -1.0f);
+            line.Move(0.0f, -1.0f, 0.0f, 0.0f);
             break;
         case SDL_Keycode(SDLK_A):
-            obj.Move(-1.0f, 0.0f);
+            line.Move(-1.0f, 0.0f, 0.0f, 0.0f);
             break;
         case SDL_Keycode(SDLK_S):
-            obj.Move(0.0f, 1.0f);
-            //SDL_Log("X: %f | Y: %f", obj.GetPosition()->x, obj.GetPosition()->y);
+            line.Move(0.0f, 1.0f, 0.0f, 0.0f);
             break;
         case SDL_Keycode(SDLK_D):
-            obj.Move(1.0f, 0.0f);
-            //SDL_Log("X: %f | Y: %f", obj.GetPosition()->x, obj.GetPosition()->y);
+            line.Move(1.0f, 0.0f, 0.0f, 0.0f);
             break;
         case SDLK_Q:
             SDL_Quit();
@@ -120,12 +119,10 @@ SDL_AppResult SDL_AppIterate(void *appstate)
         /* clear the window to the draw color. */
         SDL_RenderClear(Core::GetRenderer());
 
-        SDL_SetRenderDrawColorFloat(Core::GetRenderer(), 0.2, 0.5, 0.8, SDL_ALPHA_OPAQUE_FLOAT);
+        obj.SetColor(0.8f, 0.5f, 0.6f);
+        line.SetColor(0.4f, 0.5f, 0.2f);
 
         obj.Draw();
-
-        SDL_SetRenderDrawColorFloat(Core::GetRenderer(), 0.6, 0.8, 0.8, SDL_ALPHA_OPAQUE_FLOAT);
-
         line.Draw();
 
         /* put the newly-cleared rendering on the screen. */

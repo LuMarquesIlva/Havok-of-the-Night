@@ -5,6 +5,8 @@
 #define VK_NO_PROTOTYPES 1
 
 #include <string>
+#include <cxxabi.h>
+#include <iostream>
 
 #include <SDL3/SDL_stdinc.h>
 #include <SDL3/SDL_main.h>
@@ -14,8 +16,6 @@
 #ifndef _USE_VULKAN
     #include <SDL3/SDL_render.h>
 #endif
-
-#include "Utility.hpp"
 
 #ifdef _USE_VULKAN
     #include <SDL3/SDL_vulkan.h>
